@@ -3,6 +3,7 @@ package com.travelog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -34,6 +35,18 @@ public class RegistrationActivity extends AppCompatActivity {
 
         emailEditText = findViewById(R.id.et_email);
         passwordEditText = findViewById(R.id.et_password);
+
+        Button registerButton = findViewById(R.id.btn_register);
+
+        registerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                registerButtonClick();
+            }
+        });
+
+
+
     }
 
     private void registerButtonClick() {
