@@ -1,5 +1,6 @@
 package com.travelog;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -27,15 +28,15 @@ public class LoginActivity extends AppCompatActivity {
         // You'll add listeners for your button and textview here
         TextView registerLinkTextView = findViewById(R.id.link_register);
 
-
         registerLinkTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-
-
+                Intent intent=new Intent(LoginActivity.this, RegistrationActivity.class);
+                startActivity(intent);
+                finish();
             }
         });
+
 
     }
 }
