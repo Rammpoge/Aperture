@@ -1,6 +1,11 @@
 package com.travelog;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -8,7 +13,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.travelog.utils.RegistrationManager;
+
 public class RegistrationActivity extends AppCompatActivity {
+
+    private static final String TAG = "RegistrationActivity";
+    private EditText emailEditText;
+    private EditText passwordEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,5 +31,32 @@ public class RegistrationActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        emailEditText = findViewById(R.id.et_email);
+        passwordEditText = findViewById(R.id.et_password);
     }
+
+    private void registerButtonClick() {
+        Log.d(TAG, "Register button clicked");
+        RegistrationManager registrationManager = new RegistrationManager(RegistrationActivity.this);
+        registrationManager.startRegistration(
+                emailEditText.getText().toString(),
+                passwordEditText.getText().toString(),
+                new RegistrationManager.OnResultCallback(){
+                    @Override
+                    public void onResult(boolean success, String message) {
+                        if (success) {
+                            Toast.makeText(RegistrationActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }
+                        else {
+                            Toast.makeText(RegistrationActivity.this, "Registration failed: " + message, Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+    }
+
+}
 }
