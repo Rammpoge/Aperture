@@ -12,6 +12,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.io.File;
+
 public class RegistrationManager {
     private static final String TAG = "RegistrationManager";
 
@@ -32,6 +34,8 @@ public class RegistrationManager {
     Activity activity;
 
     OnResultCallback onResultCallback;
+
+    File imageFile;
 
     public RegistrationManager(Activity activity) {
         Log.d(TAG, "RegistrationManager: started");
