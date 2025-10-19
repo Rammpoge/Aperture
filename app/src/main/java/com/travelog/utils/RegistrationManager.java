@@ -37,6 +37,8 @@ public class RegistrationManager {
 
     File imageFile;
 
+
+
     public RegistrationManager(Activity activity) {
         Log.d(TAG, "RegistrationManager: started");
         this.activity = activity;
@@ -50,6 +52,7 @@ public class RegistrationManager {
 
     public void startRegistration(String email,
                                   String password,
+                                  File imageFile,
                                   OnResultCallback onResultCallback)
     {
         this.onResultCallback = onResultCallback;
