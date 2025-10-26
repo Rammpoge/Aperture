@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".RegistrationActivity">
 
+
     <EditText
         android:id="@+id/et_email"
         android:layout_width="0dp"
@@ -33,6 +34,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_email" />
 
+
+
     <ImageView
         android:id="@+id/iv_profile_picture"
         android:layout_width="65dp"
@@ -52,6 +55,32 @@
         app:layout_constraintEnd_toEndOf="@+id/et_password"
         app:layout_constraintTop_toTopOf="@+id/iv_profile_picture" />
 
+    <EditText
+        android:id="@+id/et_nickname"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:hint="Nickname"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/iv_profile_picture"/>
+
+    <EditText
+        android:id="@+id/et_age"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:hint="Age"
+        android:inputType="number"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_nickname" />
+
     <Button
         android:id="@+id/btn_register"
         android:layout_width="0dp"
@@ -60,6 +89,6 @@
         android:text="Register"
         app:layout_constraintEnd_toEndOf="@+id/et_password"
         app:layout_constraintStart_toStartOf="@+id/et_password"
-        app:layout_constraintTop_toBottomOf="@+id/iv_profile_picture" />
+        app:layout_constraintTop_toBottomOf="@+id/et_age" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
