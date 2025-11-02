@@ -25,6 +25,10 @@ public class RegistrationActivity extends AppCompatActivity {
     private EditText passwordEditText;
     UserImageSelector userImageSelector;
 
+    private  EditText ageEditText;
+
+    private  EditText nicknameEditText;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +74,9 @@ public class RegistrationActivity extends AppCompatActivity {
                 emailEditText.getText().toString(),
                 passwordEditText.getText().toString(),
                 userImageSelector.createImageFile(),
+                nicknameEditText.getText().toString(),
+                Integer.parseInt(ageEditText.getText().toString()),
+
                 new RegistrationManager.OnResultCallback(){
                     @Override
                     public void onResult(boolean success, String message) {
