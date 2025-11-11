@@ -25,9 +25,9 @@ public class RegistrationActivity extends AppCompatActivity {
     private EditText passwordEditText;
     UserImageSelector userImageSelector;
 
-    private  EditText ageEditText;
-
     private  EditText nicknameEditText;
+
+    private EditText ageEditText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +42,9 @@ public class RegistrationActivity extends AppCompatActivity {
 
         emailEditText = findViewById(R.id.et_email);
         passwordEditText = findViewById(R.id.et_password);
+        nicknameEditText = findViewById(R.id.et_nickname);
+        ageEditText = findViewById(R.id.et_age);
+
 
         Button registerButton = findViewById(R.id.btn_register);
 
@@ -75,7 +78,7 @@ public class RegistrationActivity extends AppCompatActivity {
                 passwordEditText.getText().toString(),
                 userImageSelector.createImageFile(),
                 nicknameEditText.getText().toString(),
-                Integer.parseInt(ageEditText.getText().toString()),
+                Integer.valueOf(ageEditText.getText().toString()),
 
                 new RegistrationManager.OnResultCallback(){
                     @Override

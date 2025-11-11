@@ -36,7 +36,7 @@ public class RegistrationManager {
 
     String nickname;
 
-    Integer age;
+    int age;
 
     Activity activity;
 
