@@ -4,9 +4,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -26,6 +28,7 @@ public class RegistrationActivity extends AppCompatActivity {
     UserImageSelector userImageSelector;
 
     private  EditText nicknameEditText;
+    private Spinner userLevelSpinner;
 
     private EditText ageEditText;
 
@@ -43,8 +46,13 @@ public class RegistrationActivity extends AppCompatActivity {
         emailEditText = findViewById(R.id.et_email);
         passwordEditText = findViewById(R.id.et_password);
         nicknameEditText = findViewById(R.id.et_nickname);
+        userLevelSpinner = findViewById(R.id.sp_user_level);
         ageEditText = findViewById(R.id.et_age);
 
+        String[] userLevels = getResources().getStringArray(R.array.Spinner_level);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, userLevels);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        userLevelSpinner.setAdapter(adapter);
 
         Button registerButton = findViewById(R.id.btn_register);
 
@@ -64,10 +72,6 @@ public class RegistrationActivity extends AppCompatActivity {
                 userImageSelector.showImageSourceDialog();
             }
         });
-
-
-
-
     }
 
     private void registerButtonClick() {
@@ -78,6 +82,7 @@ public class RegistrationActivity extends AppCompatActivity {
                 passwordEditText.getText().toString(),
                 userImageSelector.createImageFile(),
                 nicknameEditText.getText().toString(),
+                userLevelSpinner.getSelectedItem().toString(),
                 Integer.valueOf(ageEditText.getText().toString()),
 
                 new RegistrationManager.OnResultCallback(){

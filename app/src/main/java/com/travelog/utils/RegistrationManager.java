@@ -36,6 +36,8 @@ public class RegistrationManager {
 
     String nickname;
 
+    String level;
+
     int age;
 
     Activity activity;
@@ -60,7 +62,7 @@ public class RegistrationManager {
     public void startRegistration(String email,
                                   String password,
                                   File imageFile,
-                                  String nickname, Integer age,
+                                  String nickname, String level ,Integer age,
                                   OnResultCallback onResultCallback)
     {
         this.onResultCallback = onResultCallback;
@@ -68,6 +70,7 @@ public class RegistrationManager {
         this.password = password;
         this.imageFile = imageFile;
         this.nickname = nickname;
+        this.level = level;
         this.age = age;
 
 
@@ -200,6 +203,7 @@ public class RegistrationManager {
         Log.d(TAG, "Saving user to Firestore. UID: " + userId + ", Nickname: " + nickname + ", Age: " + age);
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("nickname", nickname);
+        userMap.put("level", level);
         userMap.put("age", age);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
