@@ -26,6 +26,15 @@
             android:textStyle="bold"
             />
 
+        <ImageButton
+            android:id="@+id/addPostButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_add"
+            app:tint="?attr/colorOnSurface" />
+
         <Button
             android:id="@+id/logOutButton"
             android:layout_width="wrap_content"

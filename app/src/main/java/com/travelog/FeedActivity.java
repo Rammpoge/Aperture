@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -38,6 +39,16 @@ public class FeedActivity extends AppCompatActivity {
 
         Button logOutButton = findViewById(R.id.logOutButton);
         TextView pageTitle = findViewById(R.id.pageTitle);
+        ImageButton addPostButton = findViewById(R.id.addPostButton);
+
+        addPostButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Create an Intent to start AddPostActivity
+                Intent intent = new Intent(FeedActivity.this, AddPostActivity.class);
+                startActivity(intent);
+            }
+        });
 
         logOutButton.setOnClickListener(new View.OnClickListener() {
             @Override
