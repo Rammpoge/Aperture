@@ -1,6 +1,12 @@
 package com.travelog.utils;
 
+import android.text.format.DateUtils;
+
 import com.google.firebase.Timestamp;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class TravelPost {
     private String title;
@@ -29,6 +35,7 @@ public class TravelPost {
     public void setOwnerUid(String ownerUid) { this.ownerUid = ownerUid; }
     public String getOwnerNickname() { return ownerNickname; }
     public void setOwnerNickname(String ownerNickname) { this.ownerNickname = ownerNickname; }
+
 
 
 }

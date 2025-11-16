@@ -20,7 +20,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.travelog.utils.PostsAdapter;
+import com.travelog.utils.TravelPost;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FeedActivity extends AppCompatActivity {
 
@@ -29,6 +36,7 @@ public class FeedActivity extends AppCompatActivity {
     private String level;
     private RecyclerView recyclerView;
     private PostsAdapter postsAdapter;
+    private List<TravelPost> posts;
 
 
 
@@ -75,7 +83,9 @@ public class FeedActivity extends AppCompatActivity {
             pageTitle.setText(nickname + " (lvl." + level + ")");
         }
 
+        posts = new ArrayList<>();
         initRecyclerView();
+        loadPosts();
     }
 
     private void readUserData(){
@@ -94,11 +104,31 @@ public class FeedActivity extends AppCompatActivity {
         Log.d(TAG, "readUserData: level: " + level);
     }
 
+    private void loadPosts() {
+        Log.d(TAG, "loadPosts: start");
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("posts")
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    posts.clear();
+                    Log.d(TAG, "loadPosts succeeded: " + queryDocumentSnapshots.size() + " documents");
+                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                        TravelPost post = doc.toObject(TravelPost.class);
+                        posts.add(post);
+                    }
+                    postsAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to load posts: " + e.getMessage()));
+    }
+
+
     private void initRecyclerView()
     {
         recyclerView = findViewById(R.id.recycler_posts);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        postsAdapter = new PostsAdapter();
+        postsAdapter = new PostsAdapter(posts);
         recyclerView.setAdapter(postsAdapter);
     }
 
