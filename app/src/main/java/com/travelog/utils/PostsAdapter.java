@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.Timestamp;
 import com.travelog.R;
 
@@ -49,13 +50,14 @@ public class PostsAdapter extends
         holder.descriptionTextView.setText(post.getDescription());
         holder.dateTextView.setText(timestampToString(post.getCreatedAt()));
         holder.ownerTextView.setText(post.getOwnerNickname());
-        if(position % 2 == 0){
-            holder.postImageView.setImageResource(R.drawable.ic_launcher_foreground);
-            holder.profileImageView.setImageResource(R.drawable.ic_launcher_background);
-        }else {
-            holder.postImageView.setImageResource(R.drawable.ic_launcher_background);
-            holder.profileImageView.setImageResource(R.drawable.ic_launcher_foreground);
-        }
+        String profilePicturePath = "images/profile-pics/" + post.getOwnerUid() + ".jpg";
+        String profilePictureUrl = SupabaseStorageHelper.getFileSupabaseUrl(profilePicturePath);
+
+        Glide.with(holder.itemView)
+                .load(profilePictureUrl)
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .centerCrop()
+                .into(holder.profileImageView);
 
     }
     private String timestampToString(Timestamp timestamp) {
