@@ -5,16 +5,16 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".FeedActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context=".FeedActivity">
 
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="8dp"
-        android:gravity="center_vertical">
+        android:padding="8dp">
 
         <TextView
             android:id="@+id/pageTitle"
@@ -23,8 +23,7 @@
             android:layout_weight="1"
             android:text="Feed"
             android:textSize="24sp"
-            android:textStyle="bold"
-            />
+            android:textStyle="bold" />
 
         <ImageButton
             android:id="@+id/addPostButton"
@@ -39,9 +38,18 @@
             android:id="@+id/logOutButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Log Out"
-            />
+            android:text="Log Out" />
 
     </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_posts"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:padding="8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/post" />
 
 </LinearLayout>

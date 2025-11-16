@@ -16,14 +16,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.travelog.utils.PostsAdapter;
 
 public class FeedActivity extends AppCompatActivity {
 
     private String nickname;
     private int age;
     private String level;
+    private RecyclerView recyclerView;
+    private PostsAdapter postsAdapter;
+
 
 
     @Override
@@ -68,6 +74,8 @@ public class FeedActivity extends AppCompatActivity {
 
             pageTitle.setText(nickname + " (lvl." + level + ")");
         }
+
+        initRecyclerView();
     }
 
     private void readUserData(){
@@ -85,6 +93,15 @@ public class FeedActivity extends AppCompatActivity {
         level = sharedPreferences.getString("level", "67420");
         Log.d(TAG, "readUserData: level: " + level);
     }
+
+    private void initRecyclerView()
+    {
+        recyclerView = findViewById(R.id.recycler_posts);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        postsAdapter = new PostsAdapter();
+        recyclerView.setAdapter(postsAdapter);
+    }
+
 
 
 
