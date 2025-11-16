@@ -63,7 +63,7 @@ public class RegistrationActivity extends AppCompatActivity {
             }
         });
 
-        ImageView profilePictureImageView = findViewById(R.id.iv_profile_picture);
+        ImageView profilePictureImageView = findViewById(R.id.iv_post_image);
         userImageSelector = new UserImageSelector(this, profilePictureImageView);
         Button choosePictureButton = findViewById(R.id.btn_choose_picture);
         choosePictureButton.setOnClickListener(new View.OnClickListener() {
