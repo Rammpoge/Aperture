@@ -19,11 +19,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.travelog.utils.PostsAdapter;
 import com.travelog.utils.TravelPost;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,7 +99,7 @@ public class FeedActivity extends AppCompatActivity {
 
         posts = new ArrayList<>();
         initRecyclerView();
-        loadPosts();
+        registerToNewPosts();
     }
 
     private void readUserData(){
@@ -112,24 +118,6 @@ public class FeedActivity extends AppCompatActivity {
         Log.d(TAG, "readUserData: level: " + level);
     }
 
-    private void loadPosts() {
-        Log.d(TAG, "loadPosts: start");
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("posts")
-                .orderBy("createdAt", Query.Direction.DESCENDING)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    posts.clear();
-                    Log.d(TAG, "loadPosts succeeded: " + queryDocumentSnapshots.size() + " documents");
-                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        TravelPost post = doc.toObject(TravelPost.class);
-                        posts.add(post);
-                    }
-                    postsAdapter.notifyDataSetChanged();
-                })
-                .addOnFailureListener(e -> Log.e(TAG, "Failed to load posts: " + e.getMessage()));
-    }
 
 
     private void initRecyclerView()
@@ -138,6 +126,41 @@ public class FeedActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         postsAdapter = new PostsAdapter(posts);
         recyclerView.setAdapter(postsAdapter);
+    }
+
+    private void registerToNewPosts() {
+        Log.d(TAG, "registerToNewPosts: start");
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("posts")
+                .orderBy("createdAt", Query.Direction.ASCENDING)
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot snapshots,
+                                        @Nullable FirebaseFirestoreException e) {
+                        if (e != null) {
+                            Log.w(TAG, "listen:error", e);
+                            return;
+                        }
+
+                        for (DocumentChange dc : snapshots.getDocumentChanges()) {
+                            switch (dc.getType()) {
+                                case ADDED:
+                                    Log.d(TAG, "New post: " + dc.getDocument().getData());
+                                    TravelPost post = dc.getDocument().toObject(TravelPost.class);
+                                    posts.addFirst(post);
+                                    break;
+                                case MODIFIED:
+                                    Log.d(TAG, "Modified post: " + dc.getDocument().getData());
+                                    break;
+                                case REMOVED:
+                                    Log.d(TAG, "Removed post: " + dc.getDocument().getData());
+                                    break;
+                            }
+                        }
+                        postsAdapter.notifyDataSetChanged();
+                    }
+                });
     }
 
 
