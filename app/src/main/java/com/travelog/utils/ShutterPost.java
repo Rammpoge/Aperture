@@ -1,23 +1,17 @@
 package com.travelog.utils;
 
-import android.text.format.DateUtils;
-
 import com.google.firebase.Timestamp;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-
-public class TravelPost {
+public class ShutterPost {
     private String title;
     private String description;
     private String ownerUid;
     private String ownerNickname;
     private Timestamp createdAt;
 
-    public TravelPost() {}
+    public ShutterPost() {}
 
-    public TravelPost(String title, String description, String ownerUid, String ownerNickname,Timestamp createdAt) {
+    public ShutterPost(String title, String description, String ownerUid, String ownerNickname, Timestamp createdAt) {
         this.title = title;
         this.description = description;
         this.ownerUid = ownerUid;

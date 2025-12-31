@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TravelLog"
+rootProject.name = "Aperture"
 include(":app")
  

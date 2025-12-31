@@ -24,10 +24,9 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.travelog.utils.PostsAdapter;
-import com.travelog.utils.TravelPost;
+import com.travelog.utils.ShutterPost;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -41,7 +40,7 @@ public class FeedActivity extends AppCompatActivity {
     private String level;
     private RecyclerView recyclerView;
     private PostsAdapter postsAdapter;
-    private List<TravelPost> posts;
+    private List<ShutterPost> posts;
 
 
 
@@ -147,7 +146,7 @@ public class FeedActivity extends AppCompatActivity {
                             switch (dc.getType()) {
                                 case ADDED:
                                     Log.d(TAG, "New post: " + dc.getDocument().getData());
-                                    TravelPost post = dc.getDocument().toObject(TravelPost.class);
+                                    ShutterPost post = dc.getDocument().toObject(ShutterPost.class);
                                     posts.addFirst(post);
                                     break;
                                 case MODIFIED:

@@ -20,7 +20,7 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.type.Date;
-import com.travelog.utils.TravelPost;
+import com.travelog.utils.ShutterPost;
 
 
 
@@ -67,7 +67,7 @@ public class AddPostActivity extends AppCompatActivity {
 
     }
 
-    private TravelPost createTravelPost(){
+    private ShutterPost createTravelPost(){
         Log.d(TAG, "readUserData: start");
         //about to read data from userInfo.xml
         SharedPreferences sharedPreferences = getSharedPreferences("userInfo", MODE_PRIVATE);
@@ -76,7 +76,7 @@ public class AddPostActivity extends AppCompatActivity {
         ownerNickname = sharedPreferences.getString("nickname", "N/A");
         Log.d(TAG, "readUserData: nickname: " + ownerNickname);
 
-        TravelPost travelPost = new TravelPost(
+        ShutterPost travelPost = new ShutterPost(
                 postTitle.getText().toString(),
                 postDescription.getText().toString(),
                 FirebaseAuth.getInstance().getCurrentUser().getUid(),
@@ -91,7 +91,7 @@ public class AddPostActivity extends AppCompatActivity {
 
     public void sendPost() {
         Log.d(TAG, "sendPost: start");
-        TravelPost post = createTravelPost();
+        ShutterPost post = createTravelPost();
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("posts")

@@ -24,13 +24,13 @@ public class PostsAdapter extends
         RecyclerView.Adapter<PostsAdapter.PostViewHolder> {
 
     private static final String TAG = "PostsAdapter";
-    private List<TravelPost> posts;
+    private List<ShutterPost> posts;
 
-    public PostsAdapter(List<TravelPost> posts) {
+    public PostsAdapter(List<ShutterPost> posts) {
         this.posts = posts;
     }
 
-    public void setPosts(List<TravelPost> posts) {
+    public void setPosts(List<ShutterPost> posts) {
     }
 
     @NonNull
@@ -42,7 +42,7 @@ public class PostsAdapter extends
 
     @Override
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
-        TravelPost post = posts.get(position);
+        ShutterPost post = posts.get(position);
 
         Log.d(TAG, "onBindViewHolder: adding post item #" + position);
 

@@ -22,7 +22,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.travelog.utils.PostsAdapter;
-import com.travelog.utils.TravelPost;
+import com.travelog.utils.ShutterPost;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ public class MyPostsActivity extends AppCompatActivity {
     private String nickname;
     private RecyclerView recyclerView;
     private PostsAdapter postsAdapter;
-    private List<TravelPost> posts;
+    private List<ShutterPost> posts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +77,7 @@ public class MyPostsActivity extends AppCompatActivity {
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     posts.clear();
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                        TravelPost post = doc.toObject(TravelPost.class);
+                        ShutterPost post = doc.toObject(ShutterPost.class);
                         posts.add(post);
                     }
                     postsAdapter.notifyDataSetChanged();
