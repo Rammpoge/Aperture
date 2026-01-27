@@ -31,6 +31,8 @@ public class PostsAdapter extends
     }
 
     public void setPosts(List<ShutterPost> posts) {
+        this.posts = posts;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -50,6 +52,32 @@ public class PostsAdapter extends
         holder.descriptionTextView.setText(post.getDescription());
         holder.dateTextView.setText(timestampToString(post.getCreatedAt()));
         holder.ownerTextView.setText(post.getOwnerNickname());
+
+        // Display Camera and Lens info
+        String cameraInfo = "";
+        if (post.getCamera() != null && !post.getCamera().isEmpty()) {
+            cameraInfo = post.getCamera();
+        }
+        if (post.getLens() != null && !post.getLens().isEmpty()) {
+            cameraInfo += (cameraInfo.isEmpty() ? "" : " • ") + post.getLens();
+        }
+        holder.cameraInfoTextView.setText(cameraInfo);
+        holder.cameraInfoTextView.setVisibility(cameraInfo.isEmpty() ? View.GONE : View.VISIBLE);
+
+        // Display Shutter Speed and Aperture
+        String settingsInfo = "";
+        if (post.getShutterSpeed() != null && !post.getShutterSpeed().isEmpty()) {
+            settingsInfo = post.getShutterSpeed();
+        }
+        if (post.getAperture() != null && !post.getAperture().isEmpty()) {
+            settingsInfo += (settingsInfo.isEmpty() ? "" : " • ") + post.getAperture();
+        }
+        holder.settingsInfoTextView.setText(settingsInfo);
+        holder.settingsInfoTextView.setVisibility(settingsInfo.isEmpty() ? View.GONE : View.VISIBLE);
+        
+        holder.metadataContainer.setVisibility((cameraInfo.isEmpty() && settingsInfo.isEmpty()) ? View.GONE : View.VISIBLE);
+
+        // Load profile picture
         String profilePicturePath = "images/profile-pics/" + post.getOwnerUid() + ".jpg";
         String profilePictureUrl = SupabaseStorageHelper.getFileSupabaseUrl(profilePicturePath);
 
@@ -59,19 +87,30 @@ public class PostsAdapter extends
                 .centerCrop()
                 .into(holder.profileImageView);
 
+        // Load post image if it exists
+        if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
+            holder.postImageView.setVisibility(View.VISIBLE);
+            Glide.with(holder.itemView)
+                    .load(post.getImageUrl())
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .centerCrop()
+                    .into(holder.postImageView);
+        } else {
+            holder.postImageView.setVisibility(View.GONE);
+            holder.metadataContainer.setVisibility(View.GONE); // Metadata is usually tied to the image
+        }
+
     }
     private String timestampToString(Timestamp timestamp) {
-
+        if (timestamp == null) return "Unknown";
         Date messageDate = timestamp.toDate();
 
         boolean isToday = DateUtils.isToday(messageDate.getTime());
 
         SimpleDateFormat fmt;
         if (isToday) {
-            // only show hour:minute, e.g. "14:35"
             fmt = new SimpleDateFormat("HH:mm", Locale.getDefault());
         } else {
-            // only show date, e.g. "Aug 03, 2025"
             fmt = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
         }
 
@@ -80,11 +119,8 @@ public class PostsAdapter extends
 
     @Override
     public int getItemCount() {
-        Log.d(TAG, "getItemCount: returning " + posts.size());
-        return posts.size();
+        return posts == null ? 0 : posts.size();
     }
-
-
 
     static class PostViewHolder extends RecyclerView.ViewHolder {
 
@@ -92,6 +128,9 @@ public class PostsAdapter extends
         TextView descriptionTextView;
         TextView dateTextView;
         TextView ownerTextView;
+        TextView cameraInfoTextView;
+        TextView settingsInfoTextView;
+        View metadataContainer;
         ImageView postImageView;
         ImageView profileImageView;
 
@@ -101,12 +140,11 @@ public class PostsAdapter extends
             descriptionTextView = itemView.findViewById(R.id.tv_post_description);
             dateTextView = itemView.findViewById(R.id.tv_post_created_at);
             ownerTextView = itemView.findViewById(R.id.tv_post_owner);
+            cameraInfoTextView = itemView.findViewById(R.id.tv_post_camera_info);
+            settingsInfoTextView = itemView.findViewById(R.id.tv_post_settings_info);
+            metadataContainer = itemView.findViewById(R.id.ll_metadata);
             postImageView = itemView.findViewById(R.id.iv_post_image_main);
             profileImageView = itemView.findViewById(R.id.iv_post_image);
-
-
-
         }
     }
-
 }

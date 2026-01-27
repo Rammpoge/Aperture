@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -16,7 +16,7 @@
         <ImageView
             android:id="@+id/iv_post_image_main"
             android:layout_width="0dp"
-            android:layout_height="200dp"
+            android:layout_height="240dp"
             android:contentDescription="Post Image"
             android:scaleType="centerCrop"
             app:layout_constraintEnd_toEndOf="parent"
@@ -24,39 +24,72 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
+        <!-- Camera Metadata Overlay / Section -->
+        <LinearLayout
+            android:id="@+id/ll_metadata"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="#80000000"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            app:layout_constraintBottom_toBottomOf="@id/iv_post_image_main"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:id="@+id/tv_post_camera_info"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@android:color/white"
+                android:textSize="11sp"
+                tools:text="Sony A7III • 24-70mm f2.8" />
+
+            <TextView
+                android:id="@+id/tv_post_settings_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:textSize="11sp"
+                tools:text="1/500 • f/8.0" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tv_post_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:layout_marginEnd="16dp"
             android:text="Title"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/iv_post_image_main" />
+            app:layout_constraintTop_toBottomOf="@id/ll_metadata" />
 
         <TextView
             android:id="@+id/tv_post_description"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:text="Description of the post goes here."
             android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:textColor="?attr/colorOnSurfaceVariant"
             app:layout_constraintEnd_toEndOf="@id/tv_post_title"
             app:layout_constraintStart_toStartOf="@id/tv_post_title"
             app:layout_constraintTop_toBottomOf="@id/tv_post_title" />
 
-        <ImageView
+        <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/iv_post_image"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_marginTop="16dp"
             android:contentDescription="Poster's profile picture"
             android:scaleType="centerCrop"
             app:layout_constraintStart_toStartOf="@id/tv_post_description"
             app:layout_constraintTop_toBottomOf="@id/tv_post_description"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.MaterialComponents.SmallComponent"
             tools:src="@tools:sample/avatars" />
 
         <TextView
@@ -66,6 +99,7 @@
             android:layout_marginStart="8dp"
             android:text="by Owner"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@id/iv_post_image"
             app:layout_constraintStart_toEndOf="@id/iv_post_image"
             app:layout_constraintTop_toTopOf="@id/iv_post_image" />
