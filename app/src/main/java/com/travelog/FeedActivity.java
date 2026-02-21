@@ -252,6 +252,7 @@ public class FeedActivity extends AppCompatActivity {
 
                         for (DocumentChange dc : snapshots.getDocumentChanges()) {
                             ShutterPost post = dc.getDocument().toObject(ShutterPost.class);
+                            post.setPostId(dc.getDocument().getId()); // Set the Firestore document ID
                             switch (dc.getType()) {
                                 case ADDED:
                                     allPosts.add(0, post);

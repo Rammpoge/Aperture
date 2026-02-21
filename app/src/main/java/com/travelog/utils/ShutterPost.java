@@ -1,10 +1,12 @@
 package com.travelog.utils;
 
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.Exclude;
 import java.util.List;
 import java.util.ArrayList;
 
 public class ShutterPost {
+    private String postId;
     private String title;
     private String description;
     private String ownerUid;
@@ -37,6 +39,10 @@ public class ShutterPost {
         this.category = category;
     }
 
+    @Exclude
+    public String getPostId() { return postId; }
+    public void setPostId(String postId) { this.postId = postId; }
+
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public Timestamp getCreatedAt() { return createdAt; }
@@ -51,7 +57,7 @@ public class ShutterPost {
     public List<String> getImageUrls() { return imageUrls; }
     public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
     
-    // Kept for backward compatibility if needed, though we should transition to imageUrls
+    @Exclude
     public String getImageUrl() { 
         return (imageUrls != null && !imageUrls.isEmpty()) ? imageUrls.get(0) : null; 
     }
