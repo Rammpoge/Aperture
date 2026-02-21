@@ -37,26 +37,16 @@
             android:paddingBottom="24dp">
 
             <!-- Image Preview Section -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/image_card"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_image_previews"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="200dp"
                 android:layout_marginBottom="8dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp">
-
-                <ImageView
-                    android:id="@+id/image_preview"
-                    android:layout_width="match_parent"
-                    android:layout_height="250dp"
-                    android:scaleType="centerCrop"
-                    android:visibility="gone"
-                    tools:srcCompat="@tools:sample/backgrounds/scenic"
-                    tools:visibility="visible" />
-
-            </com.google.android.material.card.MaterialCardView>
+                android:orientation="horizontal"
+                android:visibility="gone"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@android:layout/simple_list_item_1"
+                tools:visibility="visible" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/select_image_btn"
@@ -65,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="16dp"
-                android:text="Attach Image"
+                android:text="Attach Images (Up to 10)"
                 android:textAllCaps="false"
                 app:icon="@android:drawable/ic_menu_gallery" />
 
@@ -110,6 +100,28 @@
                     android:gravity="top"
                     android:minLines="5"
                     android:inputType="textMultiLine" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Category Selection -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/post_category_layout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Category"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:startIconDrawable="@android:drawable/ic_menu_sort_by_size">
+
+                <AutoCompleteTextView
+                    android:id="@+id/post_category"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
 
             </com.google.android.material.textfield.TextInputLayout>
 

@@ -10,12 +10,17 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 import com.google.firebase.Timestamp;
 import com.travelog.R;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -53,16 +58,27 @@ public class PostsAdapter extends
         holder.dateTextView.setText(timestampToString(post.getCreatedAt()));
         holder.ownerTextView.setText(post.getOwnerNickname());
 
+        // Display Category
+        if (post.getCategory() != null && !post.getCategory().isEmpty() && !post.getCategory().equals("Category")) {
+            holder.categoryChip.setText(post.getCategory());
+        } else {
+            holder.categoryChip.setText("Unassigned");
+        }
+        holder.categoryChip.setVisibility(View.VISIBLE);
+
         // Display Camera and Lens info
         String cameraInfo = "";
         if (post.getCamera() != null && !post.getCamera().isEmpty()) {
             cameraInfo = post.getCamera();
+        } else {
+            cameraInfo = "Unassigned Camera";
         }
+        
         if (post.getLens() != null && !post.getLens().isEmpty()) {
-            cameraInfo += (cameraInfo.isEmpty() ? "" : " • ") + post.getLens();
+            cameraInfo += " • " + post.getLens();
         }
         holder.cameraInfoTextView.setText(cameraInfo);
-        holder.cameraInfoTextView.setVisibility(cameraInfo.isEmpty() ? View.GONE : View.VISIBLE);
+        holder.cameraInfoTextView.setVisibility(View.VISIBLE);
 
         // Display Shutter Speed and Aperture
         String settingsInfo = "";
@@ -75,7 +91,7 @@ public class PostsAdapter extends
         holder.settingsInfoTextView.setText(settingsInfo);
         holder.settingsInfoTextView.setVisibility(settingsInfo.isEmpty() ? View.GONE : View.VISIBLE);
         
-        holder.metadataContainer.setVisibility((cameraInfo.isEmpty() && settingsInfo.isEmpty()) ? View.GONE : View.VISIBLE);
+        holder.metadataContainer.setVisibility(View.VISIBLE);
 
         // Load profile picture
         String profilePicturePath = "images/profile-pics/" + post.getOwnerUid() + ".jpg";
@@ -87,17 +103,18 @@ public class PostsAdapter extends
                 .centerCrop()
                 .into(holder.profileImageView);
 
-        // Load post image if it exists
-        if (post.getImageUrl() != null && !post.getImageUrl().isEmpty()) {
-            holder.postImageView.setVisibility(View.VISIBLE);
-            Glide.with(holder.itemView)
-                    .load(post.getImageUrl())
-                    .placeholder(android.R.drawable.ic_menu_gallery)
-                    .centerCrop()
-                    .into(holder.postImageView);
+        // Setup ViewPager for images
+        List<String> imageUrls = post.getImageUrls();
+        if (imageUrls == null) imageUrls = new ArrayList<>();
+        
+        ImagePagerAdapter imagePagerAdapter = new ImagePagerAdapter(imageUrls);
+        holder.viewPager.setAdapter(imagePagerAdapter);
+
+        if (imageUrls.size() > 1) {
+            holder.tabLayout.setVisibility(View.VISIBLE);
+            new TabLayoutMediator(holder.tabLayout, holder.viewPager, (tab, pos) -> {}).attach();
         } else {
-            holder.postImageView.setVisibility(View.GONE);
-            holder.metadataContainer.setVisibility(View.GONE); // Metadata is usually tied to the image
+            holder.tabLayout.setVisibility(View.GONE);
         }
 
     }
@@ -130,8 +147,10 @@ public class PostsAdapter extends
         TextView ownerTextView;
         TextView cameraInfoTextView;
         TextView settingsInfoTextView;
+        Chip categoryChip;
         View metadataContainer;
-        ImageView postImageView;
+        ViewPager2 viewPager;
+        TabLayout tabLayout;
         ImageView profileImageView;
 
         public PostViewHolder(@NonNull View itemView) {
@@ -142,9 +161,48 @@ public class PostsAdapter extends
             ownerTextView = itemView.findViewById(R.id.tv_post_owner);
             cameraInfoTextView = itemView.findViewById(R.id.tv_post_camera_info);
             settingsInfoTextView = itemView.findViewById(R.id.tv_post_settings_info);
+            categoryChip = itemView.findViewById(R.id.chip_post_category);
             metadataContainer = itemView.findViewById(R.id.ll_metadata);
-            postImageView = itemView.findViewById(R.id.iv_post_image_main);
+            viewPager = itemView.findViewById(R.id.vp_post_images);
+            tabLayout = itemView.findViewById(R.id.tab_layout_indicator);
             profileImageView = itemView.findViewById(R.id.iv_post_image);
+        }
+    }
+
+    static class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.ViewHolder> {
+        private final List<String> imageUrls;
+
+        ImagePagerAdapter(List<String> imageUrls) {
+            this.imageUrls = imageUrls;
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post_image, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            Glide.with(holder.itemView)
+                    .load(imageUrls.get(position))
+                    .placeholder(android.R.drawable.ic_menu_gallery)
+                    .centerCrop()
+                    .into(holder.imageView);
+        }
+
+        @Override
+        public int getItemCount() {
+            return imageUrls.size();
+        }
+
+        static class ViewHolder extends RecyclerView.ViewHolder {
+            ImageView imageView;
+            ViewHolder(View itemView) {
+                super(itemView);
+                imageView = itemView.findViewById(R.id.iv_post_image_item);
+            }
         }
     }
 }

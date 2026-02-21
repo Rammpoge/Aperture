@@ -6,18 +6,25 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.exifinterface.media.ExifInterface;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -31,7 +38,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AddPostActivity extends AppCompatActivity {
 
@@ -41,21 +51,27 @@ public class AddPostActivity extends AppCompatActivity {
     private TextInputEditText postLens;
     private TextInputEditText postShutterSpeed;
     private TextInputEditText postAperture;
+    private AutoCompleteTextView postCategory;
     private MaterialButton sendPost;
     private MaterialButton selectImageBtn;
-    private ImageView imagePreview;
+    private RecyclerView rvImagePreviews;
+    private ImagePreviewAdapter previewAdapter;
 
     private String ownerNickname;
-    private Uri selectedImageUri;
+    private List<Uri> selectedImageUris = new ArrayList<>();
 
     private final ActivityResultLauncher<String> mGetContent = registerForActivityResult(
-            new ActivityResultContracts.GetContent(),
-            uri -> {
-                if (uri != null) {
-                    selectedImageUri = uri;
-                    imagePreview.setImageURI(uri);
-                    imagePreview.setVisibility(View.VISIBLE);
-                    extractExifData(uri);
+            new ActivityResultContracts.GetMultipleContents(),
+            uris -> {
+                if (uris != null && !uris.isEmpty()) {
+                    selectedImageUris.addAll(uris);
+                    if (selectedImageUris.size() > 10) {
+                        selectedImageUris = selectedImageUris.subList(0, 10);
+                        Toast.makeText(this, "Only the first 10 images were selected", Toast.LENGTH_SHORT).show();
+                    }
+                    rvImagePreviews.setVisibility(View.VISIBLE);
+                    previewAdapter.notifyDataSetChanged();
+                    extractExifData(selectedImageUris.get(0));
                 }
             }
     );
@@ -77,18 +93,28 @@ public class AddPostActivity extends AppCompatActivity {
         postLens = findViewById(R.id.post_lens);
         postShutterSpeed = findViewById(R.id.post_shutter_speed);
         postAperture = findViewById(R.id.post_aperture);
+        postCategory = findViewById(R.id.post_category);
         
         sendPost = findViewById(R.id.send_post);
         selectImageBtn = findViewById(R.id.select_image_btn);
-        imagePreview = findViewById(R.id.image_preview);
+        rvImagePreviews = findViewById(R.id.rv_image_previews);
+
+        rvImagePreviews.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        previewAdapter = new ImagePreviewAdapter();
+        rvImagePreviews.setAdapter(previewAdapter);
+
+        // Setup Category Dropdown
+        String[] categories = new String[]{"Landscape", "Portrait", "Street", "Nature", "Architecture", "Wildlife", "Macro", "Event", "Astro", "Other"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, categories);
+        postCategory.setAdapter(adapter);
 
         selectImageBtn.setOnClickListener(v -> mGetContent.launch("image/*"));
 
         sendPost.setOnClickListener(v -> {
-            if (selectedImageUri != null) {
-                uploadImageAndSendPost();
+            if (!selectedImageUris.isEmpty()) {
+                uploadImagesAndSendPost();
             } else {
-                sendPost(null);
+                sendPost(new ArrayList<>());
             }
         });
     }
@@ -136,34 +162,45 @@ public class AddPostActivity extends AppCompatActivity {
         }
     }
 
-    private void uploadImageAndSendPost() {
-        try {
-            InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
-            File tempFile = File.createTempFile("upload", ".jpg", getCacheDir());
-            try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
-                byte[] buffer = new byte[1024];
-                int read;
-                while ((read = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, read);
+    private void uploadImagesAndSendPost() {
+        List<String> uploadedUrls = new ArrayList<>();
+        AtomicInteger remaining = new AtomicInteger(selectedImageUris.size());
+
+        for (Uri uri : selectedImageUris) {
+            try {
+                InputStream inputStream = getContentResolver().openInputStream(uri);
+                File tempFile = File.createTempFile("upload", ".jpg", getCacheDir());
+                try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
+                    byte[] buffer = new byte[1024];
+                    int read;
+                    while ((read = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, read);
+                    }
+                }
+                inputStream.close();
+
+                String fileName = "posts/" + UUID.randomUUID().toString() + ".jpg";
+                SupabaseStorageHelper.uploadPicture(tempFile, fileName, (success, url, error) -> {
+                    if (success) {
+                        uploadedUrls.add(url);
+                    } else {
+                        Log.e(TAG, "Image upload failed: " + error);
+                    }
+                    
+                    if (remaining.decrementAndGet() == 0) {
+                        sendPost(uploadedUrls);
+                    }
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "Error preparing image for upload", e);
+                if (remaining.decrementAndGet() == 0) {
+                    sendPost(uploadedUrls);
                 }
             }
-            inputStream.close();
-
-            String fileName = "posts/" + UUID.randomUUID().toString() + ".jpg";
-            SupabaseStorageHelper.uploadPicture(tempFile, fileName, (success, url, error) -> {
-                if (success) {
-                    sendPost(url);
-                } else {
-                    Toast.makeText(this, "Image upload failed: " + error, Toast.LENGTH_SHORT).show();
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "Error preparing image for upload", e);
-            Toast.makeText(this, "Error preparing image", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private ShutterPost createTravelPost(String imageUrl) {
+    private ShutterPost createTravelPost(List<String> imageUrls) {
         SharedPreferences sharedPreferences = getSharedPreferences("userInfo", MODE_PRIVATE);
         ownerNickname = sharedPreferences.getString("nickname", "N/A");
 
@@ -173,29 +210,57 @@ public class AddPostActivity extends AppCompatActivity {
                 FirebaseAuth.getInstance().getCurrentUser().getUid(),
                 ownerNickname,
                 Timestamp.now(),
-                imageUrl,
+                imageUrls,
                 postCamera.getText().toString(),
                 postLens.getText().toString(),
                 postShutterSpeed.getText().toString(),
-                postAperture.getText().toString()
+                postAperture.getText().toString(),
+                postCategory.getText().toString()
         );
     }
 
-    public void sendPost(String imageUrl) {
+    public void sendPost(List<String> imageUrls) {
         Log.d(TAG, "sendPost: start");
-        ShutterPost post = createTravelPost(imageUrl);
+        ShutterPost post = createTravelPost(imageUrls);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("posts")
                 .add(post)
                 .addOnSuccessListener(documentReference -> {
                     Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
-                    Toast.makeText(AddPostActivity.this, "Log saved successfully!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddPostActivity.this, "Post saved successfully!", Toast.LENGTH_SHORT).show();
                     finish();
                 })
                 .addOnFailureListener(e -> {
                     Log.w(TAG, "Error adding document", e);
-                    Toast.makeText(AddPostActivity.this, "Error saving log: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(AddPostActivity.this, "Error saving post: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
+    }
+
+    private class ImagePreviewAdapter extends RecyclerView.Adapter<ImagePreviewAdapter.ViewHolder> {
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_image_preview, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            holder.imageView.setImageURI(selectedImageUris.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return selectedImageUris.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            ImageView imageView;
+            ViewHolder(View itemView) {
+                super(itemView);
+                imageView = itemView.findViewById(R.id.iv_preview);
+            }
+        }
     }
 }

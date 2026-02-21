@@ -13,16 +13,43 @@
         android:layout_height="wrap_content"
         android:paddingBottom="16dp">
 
-        <ImageView
-            android:id="@+id/iv_post_image_main"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/vp_post_images"
             android:layout_width="0dp"
-            android:layout_height="240dp"
-            android:contentDescription="Post Image"
-            android:scaleType="centerCrop"
+            android:layout_height="300dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout_indicator"
+            android:layout_width="wrap_content"
+            android:layout_height="12dp"
+            android:layout_marginBottom="8dp"
+            android:background="@android:color/transparent"
+            app:layout_constraintBottom_toBottomOf="@id/vp_post_images"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:tabBackground="@drawable/tab_selector"
+            app:tabIndicatorHeight="0dp"
+            app:tabMaxWidth="12dp"
+            app:tabRippleColor="@null" />
+
+        <!-- Category Chip Overlay -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_post_category"
+            style="@style/Widget.MaterialComponents.Chip.Action"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:clickable="false"
+            android:textColor="@android:color/white"
+            app:chipBackgroundColor="#CC000000"
+            app:chipCornerRadius="16dp"
+            app:chipMinHeight="24dp"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:srcCompat="@tools:sample/backgrounds/scenic" />
+            tools:text="Landscape" />
 
         <!-- Camera Metadata Overlay / Section -->
         <LinearLayout
@@ -32,7 +59,7 @@
             android:background="#80000000"
             android:orientation="horizontal"
             android:padding="8dp"
-            app:layout_constraintBottom_toBottomOf="@id/iv_post_image_main"
+            app:layout_constraintBottom_toBottomOf="@id/vp_post_images"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
 
