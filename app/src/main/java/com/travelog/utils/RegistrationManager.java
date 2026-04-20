@@ -12,6 +12,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.io.File;
 import java.util.HashMap;
@@ -45,6 +46,8 @@ public class RegistrationManager {
     OnResultCallback onResultCallback;
 
     File imageFile;
+
+    String fcmToken;
 
 
 
@@ -142,7 +145,12 @@ public class RegistrationManager {
             return;
         }
 
-        phaseDone();
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                fcmToken = task.getResult();
+            }
+            phaseDone();
+        });
     }
 
     private void createUser()
@@ -205,6 +213,9 @@ public class RegistrationManager {
         userMap.put("nickname", nickname);
         userMap.put("level", level);
         userMap.put("age", age);
+        if (fcmToken != null) {
+            userMap.put("fcmToken", fcmToken);
+        }
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -222,4 +233,3 @@ public class RegistrationManager {
     }
 
 }
-

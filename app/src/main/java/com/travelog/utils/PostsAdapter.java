@@ -28,6 +28,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.travelog.R;
 
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,10 +39,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 public class PostsAdapter extends
         RecyclerView.Adapter<PostsAdapter.PostViewHolder> {
 
     private static final String TAG = "PostsAdapter";
+    // IMPORTANT: Replace with your actual Server Key from Firebase Console
+    private static final String FCM_SERVER_KEY = "YOUR_SERVER_KEY_HERE"; 
     private List<ShutterPost> posts;
 
     public PostsAdapter(List<ShutterPost> posts) {
@@ -62,14 +75,11 @@ public class PostsAdapter extends
     public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
         ShutterPost post = posts.get(position);
 
-        Log.d(TAG, "onBindViewHolder: adding post item #" + position);
-
         holder.titleTextView.setText(post.getTitle());
         holder.descriptionTextView.setText(post.getDescription());
         holder.dateTextView.setText(timestampToString(post.getCreatedAt()));
         holder.ownerTextView.setText(post.getOwnerNickname());
 
-        // Display Category
         if (post.getCategory() != null && !post.getCategory().isEmpty() && !post.getCategory().equals("Category")) {
             holder.categoryChip.setText(post.getCategory());
         } else {
@@ -77,21 +87,12 @@ public class PostsAdapter extends
         }
         holder.categoryChip.setVisibility(View.VISIBLE);
 
-        // Display Camera and Lens info
-        String cameraInfo = "";
-        if (post.getCamera() != null && !post.getCamera().isEmpty()) {
-            cameraInfo = post.getCamera();
-        } else {
-            cameraInfo = "Unassigned Camera";
-        }
-        
+        String cameraInfo = post.getCamera() != null && !post.getCamera().isEmpty() ? post.getCamera() : "Unassigned Camera";
         if (post.getLens() != null && !post.getLens().isEmpty()) {
             cameraInfo += " • " + post.getLens();
         }
         holder.cameraInfoTextView.setText(cameraInfo);
-        holder.cameraInfoTextView.setVisibility(View.VISIBLE);
-
-        // Display Shutter Speed and Aperture
+        
         String settingsInfo = "";
         if (post.getShutterSpeed() != null && !post.getShutterSpeed().isEmpty()) {
             settingsInfo = post.getShutterSpeed();
@@ -102,9 +103,6 @@ public class PostsAdapter extends
         holder.settingsInfoTextView.setText(settingsInfo);
         holder.settingsInfoTextView.setVisibility(settingsInfo.isEmpty() ? View.GONE : View.VISIBLE);
         
-        holder.metadataContainer.setVisibility(View.VISIBLE);
-
-        // Load profile picture
         String profilePicturePath = "images/profile-pics/" + post.getOwnerUid() + ".jpg";
         String profilePictureUrl = SupabaseStorageHelper.getFileSupabaseUrl(profilePicturePath);
 
@@ -114,7 +112,6 @@ public class PostsAdapter extends
                 .centerCrop()
                 .into(holder.profileImageView);
 
-        // Setup ViewPager for images
         List<String> imageUrls = post.getImageUrls();
         if (imageUrls == null) imageUrls = new ArrayList<>();
         
@@ -129,7 +126,6 @@ public class PostsAdapter extends
         }
 
         holder.commentButton.setOnClickListener(v -> showCommentsBottomSheet(v, post));
-
     }
 
     private void showCommentsBottomSheet(View v, ShutterPost post) {
@@ -192,23 +188,70 @@ public class PostsAdapter extends
         
         if (post.getPostId() != null) {
             FirebaseFirestore.getInstance().collection("posts").document(post.getPostId()).collection("comments").add(comment)
+                    .addOnSuccessListener(documentReference -> {
+                        // Notify the owner only if it's not their own comment
+                        if (!post.getOwnerUid().equals(FirebaseAuth.getInstance().getUid())) {
+                            notifyPostOwner(post, text, nickname);
+                        }
+                    })
                     .addOnFailureListener(e -> Toast.makeText(v.getContext(), "Failed to send comment", Toast.LENGTH_SHORT).show());
+        }
+    }
+
+    private void notifyPostOwner(ShutterPost post, String commentText, String commenterName) {
+        FirebaseFirestore.getInstance().collection("users").document(post.getOwnerUid()).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    String token = documentSnapshot.getString("fcmToken");
+                    if (token != null && !token.isEmpty()) {
+                        sendFcmNotification(token, "New Comment!", commenterName + ": " + commentText);
+                    }
+                });
+    }
+
+    private void sendFcmNotification(String targetToken, String title, String body) {
+        OkHttpClient client = new OkHttpClient();
+        MediaType mediaType = MediaType.parse("application/json");
+        
+        try {
+            JSONObject notification = new JSONObject();
+            notification.put("title", title);
+            notification.put("body", body);
+
+            JSONObject jsonBody = new JSONObject();
+            jsonBody.put("to", targetToken);
+            jsonBody.put("notification", notification);
+
+            RequestBody requestBody = RequestBody.create(jsonBody.toString(), mediaType);
+            Request request = new Request.Builder()
+                    .url("https://fcm.googleapis.com/fcm/send")
+                    .post(requestBody)
+                    .addHeader("Authorization", "key=" + FCM_SERVER_KEY)
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    Log.e(TAG, "FCM Notification failed", e);
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    Log.d(TAG, "FCM Notification response: " + response.code());
+                    response.close();
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error building FCM JSON", e);
         }
     }
 
     private String timestampToString(Timestamp timestamp) {
         if (timestamp == null) return "Unknown";
         Date messageDate = timestamp.toDate();
-
-        boolean isToday = DateUtils.isToday(messageDate.getTime());
-
-        SimpleDateFormat fmt;
-        if (isToday) {
-            fmt = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        } else {
-            fmt = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
-        }
-
+        SimpleDateFormat fmt = DateUtils.isToday(messageDate.getTime()) ? 
+                new SimpleDateFormat("HH:mm", Locale.getDefault()) : 
+                new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
         return fmt.format(messageDate);
     }
 
@@ -218,19 +261,12 @@ public class PostsAdapter extends
     }
 
     static class PostViewHolder extends RecyclerView.ViewHolder {
-
-        TextView titleTextView;
-        TextView descriptionTextView;
-        TextView dateTextView;
-        TextView ownerTextView;
-        TextView cameraInfoTextView;
-        TextView settingsInfoTextView;
+        TextView titleTextView, descriptionTextView, dateTextView, ownerTextView, cameraInfoTextView, settingsInfoTextView;
         Chip categoryChip;
-        View metadataContainer;
+        View metadataContainer, commentButton;
         ViewPager2 viewPager;
         TabLayout tabLayout;
         ImageView profileImageView;
-        View commentButton;
 
         public PostViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -251,44 +287,22 @@ public class PostsAdapter extends
 
     static class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.ViewHolder> {
         private final List<String> imageUrls;
-
-        ImagePagerAdapter(List<String> imageUrls) {
-            this.imageUrls = imageUrls;
-        }
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ImagePagerAdapter(List<String> imageUrls) { this.imageUrls = imageUrls; }
+        @NonNull @Override public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post_image, parent, false);
             return new ViewHolder(view);
         }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            Glide.with(holder.itemView)
-                    .load(imageUrls.get(position))
-                    .placeholder(android.R.drawable.ic_menu_gallery)
-                    .centerCrop()
-                    .into(holder.imageView);
+        @Override public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            Glide.with(holder.itemView).load(imageUrls.get(position)).placeholder(android.R.drawable.ic_menu_gallery).centerCrop().into(holder.imageView);
         }
-
-        @Override
-        public int getItemCount() {
-            return imageUrls.size();
-        }
-
+        @Override public int getItemCount() { return imageUrls.size(); }
         static class ViewHolder extends RecyclerView.ViewHolder {
             ImageView imageView;
-            ViewHolder(View itemView) {
-                super(itemView);
-                imageView = itemView.findViewById(R.id.iv_post_image_item);
-            }
+            ViewHolder(View itemView) { super(itemView); imageView = itemView.findViewById(R.id.iv_post_image_item); }
         }
     }
 
-    interface ReplyClickListener {
-        void onReplyClick(Comment parentComment, String text);
-    }
+    interface ReplyClickListener { void onReplyClick(Comment parentComment, String text); }
 
     private class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.ViewHolder> {
         private List<Comment> comments;
@@ -301,15 +315,12 @@ public class PostsAdapter extends
             this.replyClickListener = replyClickListener;
         }
 
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        @NonNull @Override public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_comment, parent, false);
             return new ViewHolder(view);
         }
 
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        @Override public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Comment comment = comments.get(position);
             holder.tvName.setText(comment.getOwnerNickname());
             holder.tvText.setText(comment.getText());
@@ -317,11 +328,7 @@ public class PostsAdapter extends
 
             String profilePicturePath = "images/profile-pics/" + comment.getOwnerUid() + ".jpg";
             String profilePictureUrl = SupabaseStorageHelper.getFileSupabaseUrl(profilePicturePath);
-            Glide.with(holder.itemView)
-                    .load(profilePictureUrl)
-                    .placeholder(android.R.drawable.ic_menu_gallery)
-                    .centerCrop()
-                    .into(holder.ivProfile);
+            Glide.with(holder.itemView).load(profilePictureUrl).placeholder(android.R.drawable.ic_menu_gallery).centerCrop().into(holder.ivProfile);
 
             List<Comment> replies = repliesMap.get(comment.getCommentId());
             if (replies != null && !replies.isEmpty()) {
@@ -334,16 +341,13 @@ public class PostsAdapter extends
             if (replyClickListener != null) {
                 holder.tvReply.setVisibility(View.VISIBLE);
                 holder.tvReply.setOnClickListener(v -> {
-                    // Simple reply implementation: show a dialog to write the reply
                     AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
                     builder.setTitle("Reply to " + comment.getOwnerNickname());
                     final EditText input = new EditText(v.getContext());
                     builder.setView(input);
                     builder.setPositiveButton("Reply", (dialog, which) -> {
                         String text = input.getText().toString().trim();
-                        if (!text.isEmpty()) {
-                            replyClickListener.onReplyClick(comment, text);
-                        }
+                        if (!text.isEmpty()) replyClickListener.onReplyClick(comment, text);
                     });
                     builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
                     builder.show();
@@ -353,10 +357,7 @@ public class PostsAdapter extends
             }
         }
 
-        @Override
-        public int getItemCount() {
-            return comments.size();
-        }
+        @Override public int getItemCount() { return comments.size(); }
 
         class ViewHolder extends RecyclerView.ViewHolder {
             ImageView ivProfile;

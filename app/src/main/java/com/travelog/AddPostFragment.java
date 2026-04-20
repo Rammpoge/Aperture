@@ -2,6 +2,7 @@ package com.travelog;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,15 +15,11 @@ import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.exifinterface.media.ExifInterface;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -43,7 +40,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AddPostActivity extends AppCompatActivity {
+public class AddPostFragment extends Fragment {
 
     private TextInputEditText postTitle;
     private TextInputEditText postDescription;
@@ -67,7 +64,7 @@ public class AddPostActivity extends AppCompatActivity {
                     selectedImageUris.addAll(uris);
                     if (selectedImageUris.size() > 10) {
                         selectedImageUris = selectedImageUris.subList(0, 10);
-                        Toast.makeText(this, "Only the first 10 images were selected", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Only the first 10 images were selected", Toast.LENGTH_SHORT).show();
                     }
                     rvImagePreviews.setVisibility(View.VISIBLE);
                     previewAdapter.notifyDataSetChanged();
@@ -77,35 +74,27 @@ public class AddPostActivity extends AppCompatActivity {
     );
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_add_post);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_add_post, container, false);
 
-        postTitle = findViewById(R.id.post_title);
-        postDescription = findViewById(R.id.post_description);
-        postCamera = findViewById(R.id.post_camera);
-        postLens = findViewById(R.id.post_lens);
-        postShutterSpeed = findViewById(R.id.post_shutter_speed);
-        postAperture = findViewById(R.id.post_aperture);
-        postCategory = findViewById(R.id.post_category);
+        postTitle = view.findViewById(R.id.post_title);
+        postDescription = view.findViewById(R.id.post_description);
+        postCamera = view.findViewById(R.id.post_camera);
+        postLens = view.findViewById(R.id.post_lens);
+        postShutterSpeed = view.findViewById(R.id.post_shutter_speed);
+        postAperture = view.findViewById(R.id.post_aperture);
+        postCategory = view.findViewById(R.id.post_category);
         
-        sendPost = findViewById(R.id.send_post);
-        selectImageBtn = findViewById(R.id.select_image_btn);
-        rvImagePreviews = findViewById(R.id.rv_image_previews);
+        sendPost = view.findViewById(R.id.send_post);
+        selectImageBtn = view.findViewById(R.id.select_image_btn);
+        rvImagePreviews = view.findViewById(R.id.rv_image_previews);
 
-        rvImagePreviews.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rvImagePreviews.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
         previewAdapter = new ImagePreviewAdapter();
         rvImagePreviews.setAdapter(previewAdapter);
 
-        // Setup Category Dropdown
         String[] categories = new String[]{"Landscape", "Portrait", "Street", "Nature", "Architecture", "Wildlife", "Macro", "Event", "Astro", "Other"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, categories);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, categories);
         postCategory.setAdapter(adapter);
 
         selectImageBtn.setOnClickListener(v -> mGetContent.launch("image/*"));
@@ -117,10 +106,12 @@ public class AddPostActivity extends AppCompatActivity {
                 sendPost(new ArrayList<>());
             }
         });
+
+        return view;
     }
 
     private void extractExifData(Uri uri) {
-        try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
+        try (InputStream inputStream = getActivity().getContentResolver().openInputStream(uri)) {
             if (inputStream == null) return;
             
             ExifInterface exif = new ExifInterface(inputStream);
@@ -167,7 +158,7 @@ public class AddPostActivity extends AppCompatActivity {
         AtomicInteger remaining = new AtomicInteger(selectedImageUris.size());
 
         for (Uri uri : selectedImageUris) {
-            File tempFile = ImageFileCreator.compressAndCreateTempFile(uri, this, 80);
+            File tempFile = ImageFileCreator.compressAndCreateTempFile(uri, getContext(), 80);
             if (tempFile != null) {
                 String fileName = "posts/" + UUID.randomUUID().toString() + ".jpg";
                 SupabaseStorageHelper.uploadPicture(tempFile, fileName, (success, url, error) -> {
@@ -191,7 +182,7 @@ public class AddPostActivity extends AppCompatActivity {
     }
 
     private ShutterPost createTravelPost(List<String> imageUrls) {
-        SharedPreferences sharedPreferences = getSharedPreferences("userInfo", MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("userInfo", Context.MODE_PRIVATE);
         ownerNickname = sharedPreferences.getString("nickname", "N/A");
 
         return new ShutterPost(
@@ -210,20 +201,22 @@ public class AddPostActivity extends AppCompatActivity {
     }
 
     public void sendPost(List<String> imageUrls) {
-        Log.d(TAG, "sendPost: start");
         ShutterPost post = createTravelPost(imageUrls);
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("posts")
                 .add(post)
                 .addOnSuccessListener(documentReference -> {
-                    Log.d(TAG, "DocumentSnapshot written with ID: " + documentReference.getId());
-                    Toast.makeText(AddPostActivity.this, "Post saved successfully!", Toast.LENGTH_SHORT).show();
-                    finish();
+                    Toast.makeText(getContext(), "Post saved successfully!", Toast.LENGTH_SHORT).show();
+                    // Clear form
+                    postTitle.setText("");
+                    postDescription.setText("");
+                    selectedImageUris.clear();
+                    rvImagePreviews.setVisibility(View.GONE);
+                    previewAdapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> {
-                    Log.w(TAG, "Error adding document", e);
-                    Toast.makeText(AddPostActivity.this, "Error saving post: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Error saving post: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
