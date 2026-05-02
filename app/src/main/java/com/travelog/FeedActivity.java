@@ -56,6 +56,7 @@ public class FeedActivity extends AppCompatActivity {
     }
 
     private void setupViewPager() {
+        viewPager.setUserInputEnabled(false); // Disable swiping between main pages
         viewPager.setAdapter(new FragmentStateAdapter(this) {
             @NonNull
             @Override
