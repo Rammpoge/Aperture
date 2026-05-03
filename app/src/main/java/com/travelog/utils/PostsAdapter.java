@@ -217,7 +217,7 @@ public class PostsAdapter extends
         return posts == null ? 0 : posts.size();
     }
 
-    static class PostViewHolder extends RecyclerView.ViewHolder {
+    public static class PostViewHolder extends RecyclerView.ViewHolder {
 
         TextView titleTextView;
         TextView descriptionTextView;
@@ -249,7 +249,7 @@ public class PostsAdapter extends
         }
     }
 
-    static class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.ViewHolder> {
+    public static class ImagePagerAdapter extends RecyclerView.Adapter<ImagePagerAdapter.ViewHolder> {
         private final List<String> imageUrls;
 
         ImagePagerAdapter(List<String> imageUrls) {
@@ -277,7 +277,7 @@ public class PostsAdapter extends
             return imageUrls.size();
         }
 
-        static class ViewHolder extends RecyclerView.ViewHolder {
+        public static class ViewHolder extends RecyclerView.ViewHolder {
             ImageView imageView;
             ViewHolder(View itemView) {
                 super(itemView);
@@ -286,7 +286,7 @@ public class PostsAdapter extends
         }
     }
 
-    interface ReplyClickListener {
+    public interface ReplyClickListener {
         void onReplyClick(Comment parentComment, String text);
     }
 

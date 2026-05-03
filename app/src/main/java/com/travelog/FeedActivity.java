@@ -40,18 +40,17 @@ import java.util.Set;
 public class FeedActivity extends AppCompatActivity {
 
     private String nickname;
-    private int age;
     private String level;
     private RecyclerView recyclerView;
     private PostsAdapter postsAdapter;
-    private List<ShutterPost> allPosts = new ArrayList<>();
-    private List<ShutterPost> filteredPosts = new ArrayList<>();
+    private final List<ShutterPost> allPosts = new ArrayList<>();
+    private final List<ShutterPost> filteredPosts = new ArrayList<>();
 
     private Chip categoryFilterChip;
     private Chip equipmentFilterChip;
 
-    private Set<String> selectedCategories = new HashSet<>();
-    private Set<String> selectedEquipments = new HashSet<>();
+    private final Set<String> selectedCategories = new HashSet<>();
+    private final Set<String> selectedEquipments = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -226,7 +225,6 @@ public class FeedActivity extends AppCompatActivity {
     private void readUserData(){
         SharedPreferences sharedPreferences = getSharedPreferences("userInfo", MODE_PRIVATE);
         nickname = sharedPreferences.getString("nickname", "N/A");
-        age = sharedPreferences.getInt("age", 0);
         level = sharedPreferences.getString("level", "67420");
     }
 
@@ -241,32 +239,37 @@ public class FeedActivity extends AppCompatActivity {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("posts")
                 .orderBy("createdAt", Query.Direction.ASCENDING)
-                .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable QuerySnapshot snapshots,
-                                        @Nullable FirebaseFirestoreException e) {
-                        if (e != null) {
-                            Log.w(TAG, "listen:error", e);
-                            return;
-                        }
+                .addSnapshotListener((snapshots, e) -> {
+                    if (e != null) {
+                        Log.w(TAG, "listen:error", e);
+                        return;
+                    }
 
+                    if (snapshots != null) {
                         for (DocumentChange dc : snapshots.getDocumentChanges()) {
                             ShutterPost post = dc.getDocument().toObject(ShutterPost.class);
-                            post.setPostId(dc.getDocument().getId()); // Set the Firestore document ID
-                            switch (dc.getType()) {
-                                case ADDED:
-                                    allPosts.add(0, post);
-                                    break;
-                                case MODIFIED:
-                                    // Handle modification if necessary
-                                    break;
-                                case REMOVED:
-                                    allPosts.removeIf(p -> p.getCreatedAt().equals(post.getCreatedAt()) && p.getOwnerUid().equals(post.getOwnerUid()));
-                                    break;
+                            if (post != null) {
+                                post.setPostId(dc.getDocument().getId()); // Set the Firestore document ID
+                                switch (dc.getType()) {
+                                    case ADDED:
+                                        allPosts.add(0, post);
+                                        break;
+                                    case MODIFIED:
+                                        // Handle modification if necessary
+                                        break;
+                                    case REMOVED:
+                                        allPosts.removeIf(p -> p.getCreatedAt().equals(post.getCreatedAt()) && p.getOwnerUid().equals(post.getOwnerUid()));
+                                        break;
+                                }
                             }
                         }
                         applyFilters();
+                        postsAdapter.notifyDataSetChanged();
+
+
                     }
                 });
     }
+
+
 }
