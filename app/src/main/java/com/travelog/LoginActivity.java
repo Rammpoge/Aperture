@@ -24,7 +24,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 public class LoginActivity extends AppCompatActivity {
     FirebaseAuth auth;
@@ -48,7 +47,6 @@ public class LoginActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() != null) {
             Log.i("LoginActivity", "User already signed in, navigating to FeedActivity");
-            updateFcmToken();
             Intent intent = new Intent(LoginActivity.this, FeedActivity.class);
             startActivity(intent);
             finish();
@@ -99,7 +97,6 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         // Sign in success, update UI with the signed-in user's information
                         Log.i("LoginActivity", "signInWithEmail:success");
-                        updateFcmToken();
                         getUserDataFromFirestore();
                     } else {
                         // If sign in fails, display a message to the user.
@@ -112,26 +109,6 @@ public class LoginActivity extends AppCompatActivity {
                         }
 
                         Toast.makeText(LoginActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-                    }
-                });
-    }
-
-    private void updateFcmToken() {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        Log.w(TAG, "Fetching FCM registration token failed", task.getException());
-                        return;
-                    }
-
-                    // Get new FCM registration token
-                    String token = task.getResult();
-                    String uid = FirebaseAuth.getInstance().getUid();
-                    if (uid != null) {
-                        FirebaseFirestore.getInstance().collection("users").document(uid)
-                                .update("fcmToken", token)
-                                .addOnSuccessListener(aVoid -> Log.d(TAG, "Token updated in Firestore"))
-                                .addOnFailureListener(e -> Log.e(TAG, "Failed to update token", e));
                     }
                 });
     }
@@ -158,8 +135,7 @@ public class LoginActivity extends AppCompatActivity {
                             if (document.exists()) {
                                 // User data exists, you can use it
                                 String nickname = document.getString("nickname");
-                                Long ageLong = document.getLong("age");
-                                int age = (ageLong != null) ? ageLong.intValue() : 0;
+                                int age = document.getLong("age").intValue();
                                 String level = document.getString("level");
 
                                 Log.d(TAG, "getUserDataFromFirestore onComplete: nickname: " + nickname);

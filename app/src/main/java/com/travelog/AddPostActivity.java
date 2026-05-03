@@ -31,11 +31,11 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.travelog.utils.ImageFileCreator;
 import com.travelog.utils.ShutterPost;
 import com.travelog.utils.SupabaseStorageHelper;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -167,8 +167,18 @@ public class AddPostActivity extends AppCompatActivity {
         AtomicInteger remaining = new AtomicInteger(selectedImageUris.size());
 
         for (Uri uri : selectedImageUris) {
-            File tempFile = ImageFileCreator.compressAndCreateTempFile(uri, this, 80);
-            if (tempFile != null) {
+            try {
+                InputStream inputStream = getContentResolver().openInputStream(uri);
+                File tempFile = File.createTempFile("upload", ".jpg", getCacheDir());
+                try (FileOutputStream outputStream = new FileOutputStream(tempFile)) {
+                    byte[] buffer = new byte[1024];
+                    int read;
+                    while ((read = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, read);
+                    }
+                }
+                inputStream.close();
+
                 String fileName = "posts/" + UUID.randomUUID().toString() + ".jpg";
                 SupabaseStorageHelper.uploadPicture(tempFile, fileName, (success, url, error) -> {
                     if (success) {
@@ -181,8 +191,8 @@ public class AddPostActivity extends AppCompatActivity {
                         sendPost(uploadedUrls);
                     }
                 });
-            } else {
-                Log.e(TAG, "Error preparing image for upload");
+            } catch (Exception e) {
+                Log.e(TAG, "Error preparing image for upload", e);
                 if (remaining.decrementAndGet() == 0) {
                     sendPost(uploadedUrls);
                 }
