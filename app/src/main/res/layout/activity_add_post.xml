@@ -103,6 +103,16 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_generate_ai_description"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:text="Generate Description with AI"
+                android:textAllCaps="false"
+                app:icon="@android:drawable/ic_menu_view" />
+
             <!-- Category Selection -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/post_category_layout"

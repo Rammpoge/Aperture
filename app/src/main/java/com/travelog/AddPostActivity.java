@@ -3,8 +3,12 @@ package com.travelog;
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +35,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.travelog.utils.GeminiManager;
 import com.travelog.utils.ShutterPost;
 import com.travelog.utils.SupabaseStorageHelper;
 
@@ -54,6 +59,7 @@ public class AddPostActivity extends AppCompatActivity {
     private AutoCompleteTextView postCategory;
     private MaterialButton sendPost;
     private MaterialButton selectImageBtn;
+    private MaterialButton generateAiDescBtn;
     private RecyclerView rvImagePreviews;
     private ImagePreviewAdapter previewAdapter;
 
@@ -97,6 +103,7 @@ public class AddPostActivity extends AppCompatActivity {
         
         sendPost = findViewById(R.id.send_post);
         selectImageBtn = findViewById(R.id.select_image_btn);
+        generateAiDescBtn = findViewById(R.id.btn_generate_ai_description);
         rvImagePreviews = findViewById(R.id.rv_image_previews);
 
         rvImagePreviews.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
@@ -110,6 +117,8 @@ public class AddPostActivity extends AppCompatActivity {
 
         selectImageBtn.setOnClickListener(v -> mGetContent.launch("image/*"));
 
+        generateAiDescBtn.setOnClickListener(v -> generateAiDescription());
+
         sendPost.setOnClickListener(v -> {
             if (!selectedImageUris.isEmpty()) {
                 uploadImagesAndSendPost();
@@ -117,6 +126,59 @@ public class AddPostActivity extends AppCompatActivity {
                 sendPost(new ArrayList<>());
             }
         });
+    }
+
+    private void generateAiDescription() {
+        if (selectedImageUris.isEmpty()) {
+            Toast.makeText(this, "Please select at least one image first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<Bitmap> bitmaps = new ArrayList<>();
+        try {
+            for (Uri imageUri : selectedImageUris) {
+                Bitmap bitmap;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    ImageDecoder.Source source = ImageDecoder.createSource(getContentResolver(), imageUri);
+                    bitmap = ImageDecoder.decodeBitmap(source);
+                } else {
+                    bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                }
+
+                // Convert to software bitmap if needed
+                if (bitmap.getConfig() == Bitmap.Config.HARDWARE) {
+                    bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, false);
+                }
+                bitmaps.add(bitmap);
+            }
+
+            Toast.makeText(this, "AI is analyzing the photos...", Toast.LENGTH_SHORT).show();
+
+            GeminiManager.getInstance().sendImagesAndText(
+                    bitmaps,
+                    "Analyze these photographs and provide a single structured description representing the overall theme of the post. Use exactly these fields. Keep each field's answer under 13 words:\n" +
+                            "genre:\n" +
+                            "theme:\n" +
+                            "feeling:\n" +
+                            "colors:",
+                    this,
+                    new GeminiManager.GeminiCallback() {
+                        @Override
+                        public void onSuccess(String result) {
+                            postDescription.setText(result);
+                        }
+
+                        @Override
+                        public void onError(Throwable error) {
+                            Log.e("AddPostActivity", "Gemini error", error);
+                            Toast.makeText(AddPostActivity.this, "AI analysis failed", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+            );
+        } catch (IOException e) {
+            Log.e("AddPostActivity", "Image load error", e);
+            Toast.makeText(this, "Failed to load images for analysis", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void extractExifData(Uri uri) {
