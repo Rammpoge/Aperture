@@ -66,5 +66,5 @@ dependencies {
 // Streaming (Reactive Streams Publisher)
     implementation(libs.reactive.streams)
 
-
+    implementation("androidx.lifecycle:lifecycle-process:2.8.3")
 }

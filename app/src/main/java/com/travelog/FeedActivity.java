@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -65,12 +66,6 @@ public class FeedActivity extends AppCompatActivity {
     private final Set<String> selectedEquipments = new HashSet<>();
     private long listenerStartTime;
 
-    private final ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (!isGranted) {
-                    Toast.makeText(this, "Notification permission denied. You won't see new post alerts.", Toast.LENGTH_LONG).show();
-                }
-            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +78,6 @@ public class FeedActivity extends AppCompatActivity {
             return insets;
         });
 
-        checkNotificationPermission();
 
         ImageButton logOutButton = findViewById(R.id.logOutButton);
         TextView pageTitle = findViewById(R.id.pageTitle);
@@ -127,6 +121,7 @@ public class FeedActivity extends AppCompatActivity {
         initRecyclerView();
         listenerStartTime = System.currentTimeMillis();
         registerToNewPosts();
+        askNotificationPermission();
     }
 
     private void showCategoryFilterDialog() {
@@ -323,13 +318,33 @@ public class FeedActivity extends AppCompatActivity {
         }
     }
 
-    private void checkNotificationPermission() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Log.d("FeedActivity", "Notification permission granted.");
+                } else {
+                    Log.d("FeedActivity", "Notification permission denied.");
+                }});
+
+
+
+
+    private void askNotificationPermission() {
+        // This is only necessary for API level 33 and above.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // TIRAMISU is API 33
+            // Check if the permission has already been granted.
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                    PackageManager.PERMISSION_GRANTED) {
+                // Permission is already granted.
+                Log.d("FeedActivity", "Permission already granted.");
+            } else {
+                // Directly ask for the permission.
+                // The registered ActivityResultCallback gets the result of this request.
+                Log.d("FeedActivity", "Requesting notification permission.");
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
             }
         }
     }
-
 
 }
