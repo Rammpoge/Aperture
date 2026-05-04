@@ -183,7 +183,7 @@ public class AddPostActivity extends AppCompatActivity {
             GeminiManager.getInstance().sendImagesAndText(
                     bitmaps,
                     "Analyze these photographs and provide a single structured description representing the overall theme of the post. Use exactly these fields. Keep each field's answer under 13 words:\n" +
-                            "genre:\n" +
+                            "genre: (choose from: Landscape, Portrait, Street, Nature, Architecture, Wildlife, Macro, Event, Astro, Other)\n" +
                             "theme:\n" +
                             "feeling:\n" +
                             "colors:",
@@ -192,6 +192,29 @@ public class AddPostActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(String result) {
                             postDescription.setText(result);
+                            
+                            // Try to extract and set the category
+                            try {
+                                String[] lines = result.split("\n");
+                                for (String line : lines) {
+                                    if (line.toLowerCase().startsWith("genre:")) {
+                                        String category = line.substring(6).trim();
+                                        // Basic cleanup in case AI adds punctuation
+                                        category = category.replaceAll("[^a-zA-Z]", "");
+                                        
+                                        // Match against allowed categories
+                                        String[] validCategories = new String[]{"Landscape", "Portrait", "Street", "Nature", "Architecture", "Wildlife", "Macro", "Event", "Astro", "Other"};
+                                        for (String valid : validCategories) {
+                                            if (valid.equalsIgnoreCase(category)) {
+                                                postCategory.setText(valid, false);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.e("AddPostActivity", "Error parsing AI category", e);
+                            }
                         }
 
                         @Override
