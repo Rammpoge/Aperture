@@ -2,17 +2,27 @@ package com.travelog;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -51,6 +61,14 @@ public class FeedActivity extends AppCompatActivity {
 
     private final Set<String> selectedCategories = new HashSet<>();
     private final Set<String> selectedEquipments = new HashSet<>();
+    private long listenerStartTime;
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (!isGranted) {
+                    Toast.makeText(this, "Notification permission denied. You won't see new post alerts.", Toast.LENGTH_LONG).show();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +80,8 @@ public class FeedActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        checkNotificationPermission();
 
         ImageButton logOutButton = findViewById(R.id.logOutButton);
         TextView pageTitle = findViewById(R.id.pageTitle);
@@ -95,6 +115,7 @@ public class FeedActivity extends AppCompatActivity {
         pageTitle.setText(nickname + " (lvl." + level + ")");
 
         initRecyclerView();
+        listenerStartTime = System.currentTimeMillis();
         registerToNewPosts();
     }
 
@@ -253,6 +274,9 @@ public class FeedActivity extends AppCompatActivity {
                                 switch (dc.getType()) {
                                     case ADDED:
                                         allPosts.add(0, post);
+                                        if (post.getCreatedAt() != null && post.getCreatedAt().toDate().getTime() > listenerStartTime) {
+                                            sendNotification(this, "New Post!", post.getOwnerNickname() + " shared a new photo.");
+                                        }
                                         break;
                                     case MODIFIED:
                                         // Handle modification if necessary
@@ -269,6 +293,32 @@ public class FeedActivity extends AppCompatActivity {
 
                     }
                 });
+    }
+
+    private void sendNotification(Context context, String title, String messageBody) {
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        String channelId = "new_posts_channel";
+
+        NotificationChannel channel = new NotificationChannel(channelId, "New Posts", NotificationManager.IMPORTANCE_DEFAULT);
+        notificationManager.createNotificationChannel(channel);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(title)
+                .setContentText(messageBody)
+                .setAutoCancel(true);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            notificationManager.notify((int) System.currentTimeMillis(), builder.build());
+        }
+    }
+
+    private void checkNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
     }
 
 
