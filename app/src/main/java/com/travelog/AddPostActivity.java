@@ -2,6 +2,7 @@ package com.travelog;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
@@ -30,6 +31,7 @@ import androidx.exifinterface.media.ExifInterface;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.Timestamp;
@@ -60,6 +62,7 @@ public class AddPostActivity extends AppCompatActivity {
     private MaterialButton sendPost;
     private MaterialButton selectImageBtn;
     private MaterialButton generateAiDescBtn;
+    private BottomNavigationView bottomNavigationView;
     private RecyclerView rvImagePreviews;
     private ImagePreviewAdapter previewAdapter;
 
@@ -104,11 +107,34 @@ public class AddPostActivity extends AppCompatActivity {
         sendPost = findViewById(R.id.send_post);
         selectImageBtn = findViewById(R.id.select_image_btn);
         generateAiDescBtn = findViewById(R.id.btn_generate_ai_description);
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
         rvImagePreviews = findViewById(R.id.rv_image_previews);
 
         rvImagePreviews.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         previewAdapter = new ImagePreviewAdapter();
         rvImagePreviews.setAdapter(previewAdapter);
+
+        // Setup Bottom Navigation
+        bottomNavigationView.setSelectedItemId(R.id.nav_add);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                Intent intent = new Intent(this, FeedActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_add) {
+                return true;
+            } else if (itemId == R.id.nav_my_posts) {
+                Intent intent = new Intent(this, MyPostsActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            }
+            return false;
+        });
 
         // Setup Category Dropdown
         String[] categories = new String[]{"Landscape", "Portrait", "Street", "Nature", "Architecture", "Wildlife", "Macro", "Event", "Astro", "Other"};

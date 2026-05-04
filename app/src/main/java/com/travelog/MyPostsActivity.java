@@ -17,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -32,6 +33,7 @@ public class MyPostsActivity extends AppCompatActivity {
     private String nickname;
     private RecyclerView recyclerView;
     private PostsAdapter postsAdapter;
+    private BottomNavigationView bottomNavigationView;
     private List<ShutterPost> posts;
 
     @Override
@@ -52,6 +54,28 @@ public class MyPostsActivity extends AppCompatActivity {
         });
 
         readUserData();
+
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setSelectedItemId(R.id.nav_my_posts);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                Intent intent = new Intent(this, FeedActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_add) {
+                Intent intent = new Intent(this, AddPostActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+                return true;
+            } else if (itemId == R.id.nav_my_posts) {
+                return true;
+            }
+            return false;
+        });
 
         TextView pageTitle = findViewById(R.id.pageTitle);
         if (nickname != null && !nickname.equals("N/A")) {

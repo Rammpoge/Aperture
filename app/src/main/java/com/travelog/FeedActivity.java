@@ -29,6 +29,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.chip.Chip;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
@@ -58,6 +59,7 @@ public class FeedActivity extends AppCompatActivity {
 
     private Chip categoryFilterChip;
     private Chip equipmentFilterChip;
+    private BottomNavigationView bottomNavigationView;
 
     private final Set<String> selectedCategories = new HashSet<>();
     private final Set<String> selectedEquipments = new HashSet<>();
@@ -85,8 +87,7 @@ public class FeedActivity extends AppCompatActivity {
 
         ImageButton logOutButton = findViewById(R.id.logOutButton);
         TextView pageTitle = findViewById(R.id.pageTitle);
-        ImageButton addPostButton = findViewById(R.id.addPostButton);
-        ImageButton myPostsButton = findViewById(R.id.myPostsButton);
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         categoryFilterChip = findViewById(R.id.chip_filter_category);
         equipmentFilterChip = findViewById(R.id.chip_filter_equipment);
@@ -94,14 +95,23 @@ public class FeedActivity extends AppCompatActivity {
         categoryFilterChip.setOnClickListener(v -> showCategoryFilterDialog());
         equipmentFilterChip.setOnClickListener(v -> showEquipmentFilterDialog());
 
-        myPostsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(FeedActivity.this, MyPostsActivity.class);
-            startActivity(intent);
-        });
-
-        addPostButton.setOnClickListener(v -> {
-            Intent intent = new Intent(FeedActivity.this, AddPostActivity.class);
-            startActivity(intent);
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.nav_home) {
+                recyclerView.smoothScrollToPosition(0);
+                return true;
+            } else if (itemId == R.id.nav_add) {
+                Intent intent = new Intent(FeedActivity.this, AddPostActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                return true;
+            } else if (itemId == R.id.nav_my_posts) {
+                Intent intent = new Intent(FeedActivity.this, MyPostsActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                return true;
+            }
+            return false;
         });
 
         logOutButton.setOnClickListener(view -> {
