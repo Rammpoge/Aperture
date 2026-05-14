@@ -51,7 +51,7 @@ public class PostsNotificationService extends Service {
         mAfterFirstDBLoad = false;
         createPostNotificationChannel();
 
-        sendNotification("Best Travel App Ever","",1, true);
+        sendNotification("The awsomest photo platform","",1, true);
         listenToChangesInPosts();
 
         // If we get killed, after returning from here, restart
