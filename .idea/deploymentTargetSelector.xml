@@ -3,11 +3,11 @@
   <component name="deploymentTargetSelector">
     <selectionStates>
       <SelectionState runConfigName="app">
-        <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2026-05-04T14:30:37.126202153Z">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-05-06T08:18:24.535640040Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/Rammpoge/.android/avd/Pixel_8_Pro_2.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/home/Rammpoge/.android/avd/Pixel_8_Pro.avd" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,12 +15,7 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=/home/Rammpoge/.android/avd/Pixel_8_Pro_2.avd" />
-              </handle>
-            </Target>
-            <Target type="DEFAULT_BOOT">
-              <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=/home/Rammpoge/.android/avd/Pixel_8_Pro.avd" />
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=RFCY20LWMYR" />
               </handle>
             </Target>
           </targets>
